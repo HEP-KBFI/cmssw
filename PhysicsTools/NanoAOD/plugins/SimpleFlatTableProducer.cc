@@ -228,7 +228,11 @@ typedef SimpleFlatTableProducer<reco::Candidate> SimpleCandidateFlatTableProduce
 #include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
 typedef EventSingletonSimpleFlatTableProducer<GenEventInfoProduct> SimpleGenEventFlatTableProducer;
 
+#include "DataFormats/BTauReco/interface/HTTTopJetTagInfo.h"
+typedef SimpleFlatTableProducer<reco::HTTTopJetTagInfo> SimpleHTTInfoFlatTableProducer;
+
 #include "FWCore/Framework/interface/MakerMacros.h"
 DEFINE_FWK_MODULE(SimpleCandidateFlatTableProducer);
 DEFINE_FWK_MODULE(SimpleGenEventFlatTableProducer);
+DEFINE_FWK_MODULE(SimpleHTTInfoFlatTableProducer);
 
