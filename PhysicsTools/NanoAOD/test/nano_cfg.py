@@ -7,9 +7,6 @@ process.load("FWCore.MessageLogger.MessageLogger_cfi")
 process.load("Configuration.StandardSequences.GeometryDB_cff")
 process.load("Configuration.StandardSequences.FrontierConditions_GlobalTag_cff")
 process.load('Configuration.StandardSequences.Services_cff')
-process.load("Configuration.StandardSequences.MagneticField_AutoFromDBCurrent_cff")
-process.load("RecoBTag.Configuration.RecoBTag_cff") 
-process.load("Configuration.Geometry.GeometryRecoDB_cff")
 
 from Configuration.AlCa.autoCond import autoCond
 process.GlobalTag.globaltag = autoCond['phase1_2017_realistic']
@@ -49,7 +46,7 @@ process.calibratedPatPhotons.isMC = cms.bool(True)
 process.out = cms.OutputModule("NanoAODOutputModule",
     fileName = cms.untracked.string('nano.root'),
     outputCommands = process.NanoAODEDMEventContent.outputCommands,
-   #compressionLevel = cms.untracked.int32(9),
+    #compressionLevel = cms.untracked.int32(9),
     #compressionAlgorithm = cms.untracked.string("LZMA"),
 
 )

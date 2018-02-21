@@ -7,6 +7,10 @@ from RecoBTag.ImpactParameter.pfImpactParameterTagInfos_cfi import pfImpactParam
 from RecoBTag.SecondaryVertex.pfInclusiveSecondaryVertexFinderTagInfos_cfi import *
 from RecoBTag.SecondaryVertex.candidateCombinedSecondaryVertexV2Computer_cfi import *
 from RecoBTag.SecondaryVertex.pfBoostedDoubleSVAK8TagInfos_cfi import *
+from RecoBTag.Configuration.RecoBTag_cff import *
+from Configuration.StandardSequences.MagneticField_AutoFromDBCurrent_cff import *
+from Configuration.Geometry.GeometryRecoDB_cff import *
+
 
 ##################### User floats producers, selectors ##########################
 
@@ -233,6 +237,8 @@ ca15PFJetsCHSImpactParameterTagInfos = pfImpactParameterTagInfos.clone(
     jets = cms.InputTag("ca15PFJetsCHS"),
 )
 
+ca15PFJetsCHSImpactParameterTagInfos.explicitJTA = cms.bool(False)
+
 ca15PFJetsCHSpfInclusiveSecondaryVertexFinderTagInfos = pfInclusiveSecondaryVertexFinderTagInfos.clone(
     extSVCollection = cms.InputTag('slimmedSecondaryVertices'),
     trackIPTagInfos = cms.InputTag("ca15PFJetsCHSImpactParameterTagInfos"),                
@@ -267,7 +273,7 @@ ca15PFJetsCHScandidateBoostedDoubleSecondaryVertexComputer.trackSelection.jetDel
 
 ca15PFJetsCHSpfBoostedDoubleSecondaryVertexBJetTags = cms.EDProducer("JetTagProducer",
     jetTagComputer = cms.string("ca15PFJetsCHScandidateBoostedDoubleSecondaryVertexComputer"),
-    tagInfos = cms.VInputTag(cms.InputTag("ca15PFJetsCHSpfBoostedDoubleSVTagInfos"),)
+    tagInfos = cms.VInputTag(cms.InputTag("ca15PFJetsCHSpfBoostedDoubleSVTagInfos"))
 )
 
 ca15PFJetsCHSpatFatjet = cms.EDProducer("PATJetProducer",
@@ -364,7 +370,7 @@ FatjetBBTagTable = cms.EDProducer("SimpleCandidateFlatTableProducer",
     doc  = cms.string("CA15 fatjets (ungroomed)"),    
     singleton = cms.bool(False),
     extension = cms.bool(True), 
-    variables = cms.PSet(P4Vars,
+    variables = cms.PSet(
         bbtag  = Var("bDiscriminator('ca15PFJetsCHSpfBoostedDoubleSecondaryVertexBJetTags')",float,doc="Double btag discriminator",precision=10),
         tau1  = Var("userFloat('tau1')",float,doc="N-subjettiness",precision=10),
         tau2  = Var("userFloat('tau2')",float,doc="N-subjettiness",precision=10),
