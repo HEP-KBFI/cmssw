@@ -203,6 +203,7 @@ electronTable = cms.EDProducer("SimpleCandidateFlatTableProducer",
         convVeto = Var("passConversionVeto()",bool,doc="pass conversion veto"),
         lostHits = Var("gsfTrack.hitPattern.numberOfLostHits('MISSING_INNER_HITS')","uint8",doc="number of missing inner hits"),
         isPFcand = Var("pfCandidateRef().isNonnull()",bool,doc="electron is PF candidate"),
+        jetNDauChargedMVASel = Var("userFloat('jetNDauChargedMVASel')",float,doc="jetNDauChargedMVASel variable used by TTH MVA"),
     ),
     externalVariables = cms.PSet(
         mvaTTH = ExtVar(cms.InputTag("electronMVATTH"),float, doc="TTH MVA lepton ID score",precision=14),

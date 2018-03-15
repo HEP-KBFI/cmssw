@@ -106,6 +106,7 @@ muonTable = cms.EDProducer("SimpleCandidateFlatTableProducer",
         tightId = Var("passed('CutBasedIdTight')",bool,doc="cut-based ID, tight WP"),
         softId = Var("passed('SoftCutBasedId')",bool,doc="soft cut-based ID"),
         highPtId = Var("?passed('CutBasedIdGlobalHighPt')?2:passed('CutBasedIdTrkHighPt')","uint8",doc="high-pT cut-based ID (1 = tracker high pT, 2 = global high pT, which includes tracker high pT)"),
+        jetNDauChargedMVASel = Var("userFloat('jetNDauChargedMVASel')",float,doc="jetNDauChargedMVASel variable used by TTH MVA"),
     ),
     externalVariables = cms.PSet(
         mvaTTH = ExtVar(cms.InputTag("muonMVATTH"),float, doc="TTH MVA lepton ID score",precision=14),
