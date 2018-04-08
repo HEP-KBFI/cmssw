@@ -10,7 +10,7 @@ from RecoBTag.SecondaryVertex.pfBoostedDoubleSVAK8TagInfos_cfi import *
 from RecoBTag.Configuration.RecoBTag_cff import *
 from Configuration.StandardSequences.MagneticField_AutoFromDBCurrent_cff import *
 from Configuration.Geometry.GeometryRecoDB_cff import *
-
+from Configuration.Eras.Modifier_run2_miniAOD_80XLegacy_cff import run2_miniAOD_80XLegacy
 
 ##################### User floats producers, selectors ##########################
 
@@ -37,6 +37,10 @@ selectedElectronsTmp = cms.EDProducer("ElectronRemovalForBoostProducer",
     src = cms.InputTag("slimmedElectrons"),
     mvaIDMap = cms.InputTag("egmGsfElectronIDs:cutBasedElectronID-Fall17-94X-V1-tight"),
     rho = cms.InputTag("fixedGridRhoFastjetAll"))
+run2_miniAOD_80XLegacy.toModify(
+    selectedElectronsTmp,
+    mvaIDMap = cms.InputTag("egmGsfElectronIDs:cutBasedElectronID-Summer16-80X-V1-tight")
+)
 selectedElectrons = cms.EDFilter("CandPtrSelector", 
     src = cms.InputTag("selectedElectronsTmp"), 
     cut = cms.string("1"))
