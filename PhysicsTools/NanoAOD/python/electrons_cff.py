@@ -263,7 +263,7 @@ electronTable = cms.EDProducer("SimpleCandidateFlatTableProducer",
         isPFcand = Var("pfCandidateRef().isNonnull()",bool,doc="electron is PF candidate"),
         jetNDauChargedMVASel = Var("?userCand('jetForLepJetVar').isNonnull()?userFloat('jetNDauChargedMVASel'):0",int,doc="jetNDauChargedMVASel variable used by TTH MVA"),
         jetPtRelv2_TTHMVA = Var("?userCand('jetForLepJetVar').isNonnull()?userFloat('ptRel'):0",float,doc="jetPtRelv2 variable used by TTH MVA"),
-        jetPtRatio_TTHMVA = Var("?userCand('jetForLepJetVar').isNonnull()?min(userFloat('ptRatio'),1.5):1.0/(1.0+userFloat('PFIsoAll04')/pt)",float,doc="jetPtRatio variable used by TTH MVA"),
+        jetPtRatio_TTHMVA = Var("?userCand('jetForLepJetVar').isNonnull()?userFloat('ptRatio'):1.0/(1.0+userFloat('PFIsoAll04')/pt)",float,doc="jetPtRatio variable used by TTH MVA"),
         jetBTagCSV_TTHMVA = Var("?userCand('jetForLepJetVar').isNonnull()?max(userCand('jetForLepJetVar').bDiscriminator('pfCombinedInclusiveSecondaryVertexV2BJetTags'),0.0):0.0",float,doc="jetBTagCSV variable used by TTH MVA"),
     ),
     externalVariables = cms.PSet(
