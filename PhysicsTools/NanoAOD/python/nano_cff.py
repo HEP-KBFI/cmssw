@@ -73,7 +73,7 @@ lheInfoTable = cms.EDProducer("LHETablesProducer",
 l1bits=cms.EDProducer("L1TriggerResultsConverter", src=cms.InputTag("gtStage2Digis"), legacyL1=cms.bool(False))
 
 nanoSequence = cms.Sequence(
-        nanoMetadata + muonSequence + jetSequence + tauSequence + electronSequence+photonSequence+vertexSequence+metSequence+boostedSequence+
+        nanoMetadata + jetSequence + muonSequence + tauSequence + electronSequence+photonSequence+vertexSequence+metSequence+boostedSequence+
         isoTrackSequence + # must be after all the leptons 
         linkedObjects  +
         jetTables + muonTables + tauTables + electronTables + photonTables + globalTables + vertexTables + metTables + simpleCleanerTable + triggerObjectTables + isoTrackTables + boostedTables +
