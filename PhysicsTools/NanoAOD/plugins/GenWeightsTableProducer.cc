@@ -10,6 +10,7 @@
 #include "SimDataFormats/GeneratorProducts/interface/LHEEventProduct.h"
 #include "SimDataFormats/GeneratorProducts/interface/LHERunInfoProduct.h"
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
+#include "boost/algorithm/string.hpp"
 
 #include <vector>
 #include <unordered_map>
@@ -248,11 +249,14 @@ class GenWeightsTableProducer : public edm::global::EDProducer<edm::StreamCache<
                 std::vector<ScaleVarWeight> scaleVariationIDs;
                 std::vector<PDFSetWeights>  pdfSetWeightIDs;
                 
+                std::regex weightgroupmg26x("<weightgroup\\s+(?:name|type)=\"(.*)\"\\s+combine=\"(.*)\"\\s*>");
                 std::regex weightgroup("<weightgroup\\s+combine=\"(.*)\"\\s+(?:name|type)=\"(.*)\"\\s*>");
                 std::regex endweightgroup("</weightgroup>");
+                std::regex scalewmg26x("<weight\\s+(?:.*\\s+)?id=\"(\\d+)\"\\s*(?:lhapdf=\\d+|dyn=\\s*-?\\d+)?\\s*((?:[mM][uU][rR]|renscfact)=\"(\\S+)\"\\s+(?:[mM][uU][Ff]|facscfact)=\"(\\S+)\")(\\s+.*)?</weight>");
                 std::regex scalew("<weight\\s+(?:.*\\s+)?id=\"(\\d+)\">\\s*(?:lhapdf=\\d+|dyn=\\s*-?\\d+)?\\s*((?:mu[rR]|renscfact)=(\\S+)\\s+(?:mu[Ff]|facscfact)=(\\S+)(\\s+.*)?)</weight>");
                 std::regex pdfw("<weight\\s+id=\"(\\d+)\">\\s*(?:PDF set|lhapdf|PDF|pdfset)\\s*=\\s*(\\d+)\\s*(?:\\s.*)?</weight>");
                 std::regex pdfwOld("<weight\\s+(?:.*\\s+)?id=\"(\\d+)\">\\s*Member \\s*(\\d+)\\s*(?:.*)</weight>");
+                std::regex pdfwmg26x("<weight\\s+id=\"(\\d+)\"\\s*MUR=\"(?:\\S+)\"\\s*MUF=\"(?:\\S+)\"\\s*(?:PDF set|lhapdf|PDF|pdfset)\\s*=\\s*\"(\\d+)\"\\s*>\\s*(?:PDF=(\\d+)\\s*MemberID=(\\d+))?\\s*(?:\\s.*)?</weight>");
                 std::smatch groups;
                 for (auto iter=lheInfo->headers_begin(), end = lheInfo->headers_end(); iter != end; ++iter) {
                     if (iter->tag() != "initrwgt") {
@@ -260,24 +264,37 @@ class GenWeightsTableProducer : public edm::global::EDProducer<edm::StreamCache<
                         continue;
                     }
                     if (lheDebug) std::cout << "Found LHE header with tag" << iter->tag() << std::endl;
-                    const std::vector<std::string> & lines = iter->lines();
+                    std::vector<std::string>  lines = iter->lines();
+                    bool missed_weightgroup=false; //Needed because in some of the samples ( produced with MG26X ) a small part of the header info is ordered incorrectly
+                    bool ismg26x=false;
+                    for (unsigned int iLine = 0, nLines = lines.size(); iLine < nLines; ++iLine) { //First start looping through the lines to see which weightgroup pattern is matched
+                        boost::replace_all(lines[iLine],"&lt;", "<");
+                        boost::replace_all(lines[iLine],"&gt;", ">");
+                        if(std::regex_search(lines[iLine],groups,weightgroupmg26x)){
+                            ismg26x=true;
+                        }
+                    }
                     for (unsigned int iLine = 0, nLines = lines.size(); iLine < nLines; ++iLine) {
                         if (lheDebug) std::cout << lines[iLine];
-                        if (std::regex_search(lines[iLine], groups, weightgroup)) {
+                        if (std::regex_search(lines[iLine], groups, ismg26x ? weightgroupmg26x : weightgroup) ) {
                             std::string groupname = groups.str(2);
+                            if (ismg26x) groupname = groups.str(1);
                             if (lheDebug) std::cout << ">>> Looks like the beginning of a weight group for '" << groupname << "'" << std::endl;
                             if (groupname.find("scale_variation") == 0 || groupname == "Central scale variation") {
                                 if (lheDebug) std::cout << ">>> Looks like scale variation for theory uncertainties" << std::endl;
                                 for ( ++iLine; iLine < nLines; ++iLine) {
                                     if (lheDebug) std::cout << "    " << lines[iLine];
-                                    if (std::regex_search(lines[iLine], groups, scalew)) {
+                                    if (std::regex_search(lines[iLine], groups, ismg26x ? scalewmg26x : scalew)) {
                                         if (lheDebug) std::cout << "    >>> Scale weight " << groups[1].str() << " for " << groups[3].str() << " , " << groups[4].str() << " , " << groups[5].str() << std::endl;
                                         scaleVariationIDs.emplace_back(groups.str(1), groups.str(2), groups.str(3), groups.str(4));
                                     } else if (std::regex_search(lines[iLine], endweightgroup)) {
                                         if (lheDebug) std::cout << ">>> Looks like the end of a weight group" << std::endl;
-                                        break;
-                                    } else if (std::regex_search(lines[iLine], weightgroup)) {
+                                        if (!missed_weightgroup){
+                                            break;
+                                        } else missed_weightgroup=false;
+                                    } else if (std::regex_search(lines[iLine], ismg26x ? weightgroupmg26x : weightgroup)) {
                                         if (lheDebug) std::cout << ">>> Looks like the beginning of a new weight group, I will assume I missed the end of the group." << std::endl;
+                                        if (ismg26x) missed_weightgroup=true;
                                         --iLine; // rewind by one, and go back to the outer loop
                                         break;
                                     }
@@ -294,9 +311,12 @@ class GenWeightsTableProducer : public edm::global::EDProducer<edm::StreamCache<
                                         }
                                     } else if (std::regex_search(lines[iLine], endweightgroup)) {
                                         if (lheDebug) std::cout << ">>> Looks like the end of a weight group" << std::endl;
-                                        break;
-                                    } else if (std::regex_search(lines[iLine], weightgroup)) {
+                                        if (!missed_weightgroup){ 
+                                            break;
+                                        } else missed_weightgroup=false;
+                                    } else if (std::regex_search(lines[iLine], ismg26x ? weightgroupmg26x : weightgroup)) {
                                         if (lheDebug) std::cout << ">>> Looks like the beginning of a new weight group, I will assume I missed the end of the group." << std::endl;
+                                        if (ismg26x) missed_weightgroup=true;
                                         --iLine; // rewind by one, and go back to the outer loop
                                         break;
                                     }
@@ -318,9 +338,12 @@ class GenWeightsTableProducer : public edm::global::EDProducer<edm::StreamCache<
                                         lastid = id;
                                     } else if (std::regex_search(lines[iLine], endweightgroup)) {
                                         if (lheDebug) std::cout << ">>> Looks like the end of a weight group" << std::endl;
-                                        break;
-                                    } else if (std::regex_search(lines[iLine], weightgroup)) {
+                                        if(!missed_weightgroup) {
+                                            break;
+                                        } else missed_weightgroup=false;
+                                    } else if (std::regex_search(lines[iLine], ismg26x ? weightgroupmg26x : weightgroup)) {
                                         if (lheDebug) std::cout << ">>> Looks like the beginning of a new weight group, I will assume I missed the end of the group." << std::endl;
+                                        if (ismg26x) missed_weightgroup=true;
                                         --iLine; // rewind by one, and go back to the outer loop
                                         break;
                                     }
@@ -331,10 +354,17 @@ class GenWeightsTableProducer : public edm::global::EDProducer<edm::StreamCache<
                                 bool first = true;
                                 for ( ++iLine; iLine < nLines; ++iLine) {
                                     if (lheDebug) std::cout << "    " << lines[iLine];
-                                    if (std::regex_search(lines[iLine], groups, pdfwOld)) {
-                                        unsigned int member = std::stoi(groups.str(2));
+                                    if (std::regex_search(lines[iLine], groups, ismg26x ? pdfwmg26x : pdfwOld)) {
+                                        unsigned int member = 0;
+                                        if (ismg26x==0){
+                                            member = std::stoi(groups.str(2));
+                                        } else {
+                                            if (groups.str(4)!=""){
+                                                member = std::stoi(groups.str(4));
+                                             }
+                                        }
                                         unsigned int lhaID = member+firstLhaID;
-                                        if (lheDebug) std::cout << "    >>> PDF weight " << groups.str(1) << " for " << groups.str(2) << " = " << lhaID << std::endl;
+                                        if (lheDebug) std::cout << "    >>> PDF weight " << groups.str(1) << " for " << member << " = " << lhaID << std::endl;
                                         //if (member == 0) continue; // let's keep also the central value for now
                                         if (first) {
                                             pdfSetWeightIDs.emplace_back(groups.str(1),lhaID);
@@ -344,9 +374,12 @@ class GenWeightsTableProducer : public edm::global::EDProducer<edm::StreamCache<
                                         }
                                     } else if (std::regex_search(lines[iLine], endweightgroup)) {
                                         if (lheDebug) std::cout << ">>> Looks like the end of a weight group" << std::endl;
-                                        break;
-                                    } else if (std::regex_search(lines[iLine], weightgroup)) {
+                                        if (!missed_weightgroup) {
+                                            break;
+                                        } else missed_weightgroup=false;
+                                    } else if (std::regex_search(lines[iLine], ismg26x ? weightgroupmg26x : weightgroup)) {
                                         if (lheDebug) std::cout << ">>> Looks like the beginning of a new weight group, I will assume I missed the end of the group." << std::endl;
+                                        if (ismg26x) missed_weightgroup=true;
                                         --iLine; // rewind by one, and go back to the outer loop
                                         break;
                                     }
@@ -356,9 +389,12 @@ class GenWeightsTableProducer : public edm::global::EDProducer<edm::StreamCache<
                                     if (lheDebug) std::cout << "    " << lines[iLine];
                                     if (std::regex_search(lines[iLine], groups, endweightgroup)) {
                                         if (lheDebug) std::cout << ">>> Looks like the end of a weight group" << std::endl;
-                                        break;
-                                    } else if (std::regex_search(lines[iLine], weightgroup)) {
+                                        if (!missed_weightgroup){
+                                            break;
+                                        } else missed_weightgroup=false;
+                                    } else if (std::regex_search(lines[iLine], ismg26x ? weightgroupmg26x : weightgroup)) {
                                         if (lheDebug) std::cout << ">>> Looks like the beginning of a new weight group, I will assume I missed the end of the group." << std::endl;
+                                        if (ismg26x) missed_weightgroup=true;
                                         --iLine; // rewind by one, and go back to the outer loop
                                         break;
                                     }
