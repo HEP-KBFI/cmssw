@@ -94,12 +94,15 @@ def nanoAOD_customizeData(process):
         process.calibratedPatPhotons80X.isMC = cms.bool(False)
     return process
 
-def nanoAOD_customizeMC(process):
+def nanoAOD_customizeMC(process, doFastSim = False):
     process = nanoAOD_customizeCommon(process)
     runMetCorAndUncFromMiniAOD(process, isData = False)
     if hasattr(process,'calibratedPatElectrons80X'):
         process.calibratedPatElectrons80X.isMC = cms.bool(True)
         process.calibratedPatPhotons80X.isMC = cms.bool(True)
+    if doFastSim:
+        process.nanoAOD_step.remove(process.triggerObjectTable)
+        process.nanoAOD_step.remove(process.l1bits)
     return process
 
 ### Era dependent customization
