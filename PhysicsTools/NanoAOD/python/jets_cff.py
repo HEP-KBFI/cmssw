@@ -75,7 +75,7 @@ bJetVars = cms.EDProducer("JetRegressionVarProducer",
     #elesrc = cms.InputTag("slimmedElectrons")
 )
 
-jercVars = cms.EDProducer("BetaStarPackedCandidateVarProducer"),
+jercVars = cms.EDProducer("BetaStarPackedCandidateVarProducer",
     srcJet = cms.InputTag("slimmedJets"),    
     srcPF = cms.InputTag("packedPFCandidates"),
     maxDR = cms.double(0.4)
