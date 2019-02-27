@@ -168,6 +168,7 @@ def nanoAOD_addDeepInfo(process,addDeepBTag,addDeepFlavour):
     process.tightJetId.src="selectedUpdatedPatJetsWithDeepInfo"
     process.tightJetIdLepVeto.src="selectedUpdatedPatJetsWithDeepInfo"
     process.bJetVars.src="selectedUpdatedPatJetsWithDeepInfo"
+    process.jercVars.srcJet="selectedUpdatedPatJetsWithDeepInfo"
     process.slimmedJetsWithUserData.src="selectedUpdatedPatJetsWithDeepInfo"
     process.qgtagger80x.srcJets="selectedUpdatedPatJetsWithDeepInfo"
     if addDeepFlavour:
