@@ -63,16 +63,18 @@ class LHETablesProducer : public edm::global::EDProducer<> {
             std::vector<float> vals_phi;
             std::vector<float> vals_mass;
             std::vector<int>   vals_pid;
+            std::vector<int>   vals_status;
             for (unsigned int i = 0, n = pup.size(); i  < n; ++i) {
                 int status = hepeup.ISTUP[i];
                 int idabs = std::abs(hepeup.IDUP[i]);
-                if (status == 1){  
+                if (status == 1 || status == 2){  
                   TLorentzVector p4(pup[i][0], pup[i][1], pup[i][2], pup[i][3]); // x,y,z,t
                   vals_pt.push_back(p4.Pt());
                   vals_eta.push_back(p4.Eta());
                   vals_phi.push_back(p4.Phi());
                   vals_mass.push_back(p4.M());
                   vals_pid.push_back(hepeup.IDUP[i]);
+                  vals_status.push_back(status);
                 }  
                 if ( (status == 1) && ( ( idabs == 21 ) || (idabs > 0 && idabs < 7) ) ) { //# gluons and quarks
                     // object counters
@@ -123,6 +125,7 @@ class LHETablesProducer : public edm::global::EDProducer<> {
             outPart->addColumn<float>("phi",    vals_phi,    "Phi of LHE particles", nanoaod::FlatTable::FloatColumn, this->precision_);
             outPart->addColumn<float>("mass",   vals_mass,   "Mass of LHE particles", nanoaod::FlatTable::FloatColumn, this->precision_);
             outPart->addColumn<int>  ("pdgId",  vals_pid,    "PDG ID of LHE particles", nanoaod::FlatTable::IntColumn);
+            outPart->addColumn<int>  ("status", vals_status, "Status of LHE particles", nanoaod::FlatTable::IntColumn);
 
             return outPart;
         }
